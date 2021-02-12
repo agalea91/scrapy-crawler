@@ -13,8 +13,13 @@ Non-JS crawls.
 
 
 
-## JS crawler
+## JS crawler for local flask app
 
-JS crawls.
-
+```
+cd js_crawl
+scrapy list
+scrapy crawl js_local_8080 -O output.json
+cat crawl-data/sitemap.xml
+cat crawl-data/website_urls.json
+```
 

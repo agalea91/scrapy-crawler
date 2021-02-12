@@ -1,10 +1,11 @@
+import json
 import scrapy
 from scrapy_selenium import SeleniumRequest
-
 
 class Sitemap:
     def __init__(self):
         self._xml_records = []
+        self._urls_added = []
 
     @property
     def xml(self):
@@ -12,7 +13,6 @@ class Sitemap:
 {}
 </urlset>
 """.format("\n".join(self._xml_records))
-
 
     def get_url(self, data):
         url = data["url"]
@@ -22,6 +22,7 @@ class Sitemap:
 
     def update(self, data):
         url = self.get_url(data)
+        self._urls_added.append(url)
         self._xml_records.append(
 f"""  <url>
     <loc>{url}</loc>
@@ -29,8 +30,12 @@ f"""  <url>
 
 
     def write(self):
-        with open("../crawl-data/sitemap.xml", "w") as f:
+        with open("crawl-data/sitemap.xml", "w") as f:
             f.write(self.xml)
+
+    def write_urls_added(self):
+        with open("crawl-data/website_urls.json", "w") as f:
+            f.write(json.dumps(self._urls_added))
 
 
 
@@ -39,7 +44,6 @@ class Spider(scrapy.Spider):
 
     def init_spider(self):
         self.xml_sitemap = Sitemap()
-
 
     def start_requests(self):
         self.init_spider()
@@ -53,16 +57,16 @@ class Spider(scrapy.Spider):
     def parse(self, response):
         self.xml_sitemap.update({"url": response.url})
         self.xml_sitemap.write()
+        self.xml_sitemap.write_urls_added()
         self.dump_html(response)
         yield self.dump_page_data(response)
         for link in self.get_follow_inlinks(response):
             url = response.urljoin(link)
             yield SeleniumRequest(url=url, callback=self.parse)
 
-    
     def dump_html(self, response):
         page = response.url.replace("/", "_").replace(":", "")
-        with open(f"../crawl-data/html/{page}.html", 'wb') as f:
+        with open(f"crawl-data/html/{page}.html", 'wb') as f:
             f.write(response.body)
 
 
