@@ -48,7 +48,8 @@ class Spider(scrapy.Spider):
     def start_requests(self):
         self.init_spider()
         urls = [
-            'http://localhost:8080/'
+            'http://localhost:8080/',
+            'http://localhost:8080/404'
         ]
         for url in urls:
             yield SeleniumRequest(url=url, callback=self.parse)
